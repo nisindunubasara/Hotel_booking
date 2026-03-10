@@ -13,15 +13,19 @@ import LayOut from "./Pages/HotelOwner/LayOut";
 import DashBoard from "./Pages/HotelOwner/DashBoard";
 import AddRoom from "./Pages/HotelOwner/AddRoom";
 import ListRoom from "./Pages/HotelOwner/ListRoom";
+import {Toaster} from "react-hot-toast";
+import { useAppContext } from "./context/AppContext";
 
 const App = () => {
 
   const location = useLocation();
   const isOwnerPath = location.pathname.includes("owner");
+  const {showHotelReg} = useAppContext();
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {false && <HotelReg />}
+    <div className="min-h-screen flex flex-col"> 
+        <Toaster />
+      {showHotelReg && <HotelReg />}
       {!isOwnerPath && <NavBar />}
       <div className="flex-grow">
         <Routes>
