@@ -3,7 +3,7 @@ import User from "../models/User.js";
 
 export const registerHotel = async (req, res) => {
    try {
-      const {name, city, address, contact} = req.body;
+      const {name, contact, address, city} = req.body;
       const owner = req.user._id;
 
       const hotel = await Hotel.findOne({owner})

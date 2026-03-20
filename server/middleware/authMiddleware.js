@@ -1,33 +1,37 @@
-// middleware/authMiddleware.js
-import { users } from "@clerk/clerk-sdk-node";
 import User from "../models/User.js";
 
 export const protect = async (req, res, next) => {
   try {
-    const { userId } = req.auth; // Clerk puts userId here automatically
 
-    if (!userId) return res.status(401).json({ success: false, message: "Not authenticated" });
+    if (!req.auth || !req.auth.userId) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authenticated"
+      });
+    }
 
-    // Find the user in your database
-    let user = await User.findById(userId);
+    console.log("AUTH:", req.auth);
 
-    // If user doesn't exist in your DB, create it from Clerk data
+    const { userId } = req.auth;
+    console.log("req.auth:", req.auth);
+
+    const user = await User.findById(userId);
+
     if (!user) {
-      const clerkUser = await users.getUser(userId);
-      user = await User.create({
-        _id: clerkUser.id,
-        username: clerkUser.username || "NoName",
-        email: clerkUser.emailAddresses[0].emailAddress,
-        image: clerkUser.profileImageUrl,
-        role: "user",
-        recentSearchedCities: [],
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
       });
     }
 
     req.user = user;
+
     next();
+
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };

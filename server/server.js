@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import mongoose, { connect } from 'mongoose';
 import dotenv from 'dotenv';
 import "dotenv/config";
 import connectDB from './configs/db.js';
@@ -12,6 +11,7 @@ import connectCloudinary from './configs/cloudinary.js';
 import roomRouter from './routes/roomRoutes.js';
 import bookingsRouter from './routes/bookingsRoutes.js';
 
+dotenv.config();
 connectDB();
 connectCloudinary();
 
@@ -33,6 +33,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
-dotenv.config();
+
 
 export default app;

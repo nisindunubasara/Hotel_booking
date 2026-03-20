@@ -1,6 +1,7 @@
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
+import transporter from "../configs/nodeMailer.js";
 
 const checkAvailability = async ({room, checkInDate, checkOutDate}) => {
    try {
@@ -28,7 +29,7 @@ export const checkAvailabilityAPI = async (req, res) => {
 
 export const createBooking = async (req, res) => {
    try {
-      const { room, checkInDate, checkOutDate, gustes } = req.body;
+      const { room, checkInDate, checkOutDate, guests } = req.body;
       const user = req.user._id;
 
       const isAvailable = await checkAvailability({
@@ -54,11 +55,33 @@ export const createBooking = async (req, res) => {
          user,
          room,
          hotel: roomData.hotel._id,
-         gustes: +gustes,
+         guests: +guests,
          checkInDate,
          checkOutDate,
          totalPrice,
       })
+
+      const mailOptions = {
+         from: process.env.SENDER_EMAIL,
+         to: req.user.email,
+         subject: "Booking Confirmation",
+         html:`
+            <h2>Your booking details</h2>
+            <p>Dear ${req.user.username},</p>
+            <p>Thank you for your booking! Here are your booking details:</p>
+            <ul>
+               <li><strong>Booking ID:</strong> ${booking._id}</li>
+               <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+               <li><strong>Location:</strong> ${roomData.hotel.address}</li>
+               <li><strong>Date:</strong> ${roomData.checkInDate.toDateString()}</li>
+               <li><strong>Booking Amount:</strong> ${process.env.CURRENCY || '$'} ${booking.totalPrice} /night </li>
+            </ul>
+            <p>We look forward to hosting you!</p>
+            <p>If you need to make any changes, please contact us.</p>
+         `
+      }
+
+      await transporter.sendMail(mailOptions);
 
       res.json({success: true, message: "Booking created successfully"});
       

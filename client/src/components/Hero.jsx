@@ -1,8 +1,30 @@
-import React from "react";
+import { useState } from "react";
 import { assets } from "../assets/assets";
 import { cities } from "../assets/assets";
+import { useAppContext } from "../context/AppContext";
+
 
 const Hero = () => {
+
+  const {navigate, getToken, axios, setSearchCities} = useAppContext ();
+  const [destination, setDestination] = useState("");
+
+  const onSearch = async (e) => {
+    e.preventDefault();
+    navigate(`/rooms?destination=${destination}`);
+
+    await axios.post('/api/user/store-recent-search',{recentSearchedCity: destination},{headers: {Authorization: `Bearer ${await getToken()}`}})
+  
+    setSearchCities(prevSearchedCities => {
+        const updatedSearchCities = [...prevSearchedCities, destination];
+        if (updatedSearchCities.length > 3) {
+            updatedSearchCities.shift();
+        }
+        return updatedSearchCities;
+    });
+
+  }
+
   return (
     <div className='flex flex-col items-center md:items-start justify-center 
       px-4 md:px-16 lg:px-24 xl:px-32 text-white 
@@ -27,7 +49,7 @@ const Hero = () => {
       </p>
 
       {/* SEARCH FORM */}
-      <form className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 
+      <form onSubmit={onSearch} className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 
         flex flex-col md:flex-row gap-4 
         items-center md:items-start 
         w-full max-w-xl md:max-w-4xl'>
@@ -39,7 +61,7 @@ const Hero = () => {
             <label htmlFor="destinationInput">Destination</label>
           </div>
 
-          <input 
+          <input onChange={e=> setDestination(e.target.value)} value={destination}
             list='destinations'
             id="destinationInput"
             type="text"
