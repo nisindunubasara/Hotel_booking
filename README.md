@@ -16,10 +16,10 @@ A full-stack hotel booking web application that allows users to search, book, an
 This project is divided into separate repositories for better scalability and maintainability:
 
 * 🔹 **Frontend (React App)**
-  https://github.com/nisindunubasara/Hotel_booking_frontend
+  https://github.com/nisindunubasara/Hotel-booking-frontend
 
 * 🔹 **Backend (Node.js API)**
-  https://github.com/nisindunubasara/Hotel_booking_backend
+  https://github.com/nisindunubasara/Hotel-booking-backend
 
 ---
 
