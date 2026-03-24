@@ -10,11 +10,7 @@ export const protect = async (req, res, next) => {
       });
     }
 
-    console.log("AUTH:", req.auth);
-
     const { userId } = req.auth;
-    console.log("req.auth:", req.auth);
-
     const user = await User.findById(userId);
 
     if (!user) {
@@ -25,7 +21,6 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = user;
-
     next();
 
   } catch (error) {

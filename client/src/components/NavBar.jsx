@@ -1,15 +1,14 @@
-import React,{ use, useEffect, useState} from "react"
+import { useEffect, useState} from "react"
 import { Link, useLocation } from "react-router-dom";
 import{ assets } from "../assets/assets";
 import { useClerk, UserButton} from "@clerk/clerk-react";
 import { useAppContext } from "../context/AppContext";
-import { useAuth } from "@clerk/clerk-react";
 
 const NavBar = () => {
     const navLinks = [
         { name: 'Home', path: '/' },
         { name: 'Hotels', path: '/rooms' },
-        { name: 'Experience', path: '/' },
+        { name: 'Experience', path: '/' },//000000000000000
         { name: 'About', path: '/' },
     ];
 
@@ -21,34 +20,32 @@ const NavBar = () => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-   const {openSignIn} =  useClerk();
+    const {openSignIn} =  useClerk();//login weddi weda karanawa
    
-   const location = useLocation();
+    const location = useLocation();
 
-   const { user, navigate, isOwner, setShowHotelReg } = useAppContext();
+    const { user, navigate, isOwner, setShowHotelReg } = useAppContext();
 
     useEffect(() => {
-    
-    // If NOT home page -> always scrolled navbar
-    if (location.pathname !== "/") {
-        setIsScrolled(true);
-        return;
-    }
 
-    // Home page -> scroll event activate
-    const handleScroll = () => {
-        setIsScrolled(window.scrollY > 10);
-    };
+        if (location.pathname !== "/") {//home ke nathi sema witama nav bar eka scroll unama thiyena widiyata thiyanna
+            setIsScrolled(true);
+            return;
+        }
 
-    window.addEventListener("scroll", handleScroll);
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 10);// isScrolled true kiyala kiyanne me...pahalata giyama false 
+        };
 
-    return () => window.removeEventListener("scroll", handleScroll);
+        window.addEventListener("scroll", handleScroll);//scroll karana hema welawema handleScroll run wenawa
 
-}, [location.pathname]);
+        return () => window.removeEventListener("scroll", handleScroll);//component eka unmount unama event listener eka remove karanawa
+
+    }, [location.pathname]);//pathaname change unama me effect eka run wenawa
 
 
     return (
-            <nav className={`fixed top-0 left-0  w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
+            <nav className={`fixed top-0 left-0 w-full flex items-center justify-between px-4 md:px-16 lg:px-24 xl:px-32 transition-all duration-500 z-50 ${isScrolled ? "bg-white/80 shadow-md text-gray-700 backdrop-blur-lg py-3 md:py-4" : "py-4 md:py-6"}`}>
 
                 {/* Logo */}
                 <Link to='/'>
@@ -58,10 +55,10 @@ const NavBar = () => {
                 {/* Desktop Nav */}
                 <div className="hidden md:flex items-center gap-4 lg:gap-8">
                     {navLinks.map((link, i) => (
-                        <a key={i} href={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
+                        <Link key={i} to={link.path} className={`group flex flex-col gap-0.5 ${isScrolled ? "text-gray-700" : "text-white"}`}>
                             {link.name}
                             <div className={`${isScrolled ? "bg-gray-700" : "bg-white"} h-0.5 w-0 group-hover:w-full transition-all duration-300`} />
-                        </a>
+                        </Link>
                     ))}
                     {/*List your hotel*/}
                     { user && (
@@ -73,19 +70,19 @@ const NavBar = () => {
 
                 {/* Desktop Right */}
                 <div className="hidden md:flex items-center gap-4">
-                    <img src={assets.searchIcon} alt="search" className={`${isScrolled && 'invert'}h-7 transition-all duration-500`} />
+                    <img src={assets.searchIcon} alt="search" className={`${isScrolled ? 'invert' : ''} h-7 transition-all duration-500`} />
 
-               {user ? 
-               (<UserButton >
-                  <UserButton.MenuItems>
-                     <UserButton.Action label="My Bookings" labelIcon={<BookIcon />} onClick={()=>navigate('/my-bookings')}/>
-                  </UserButton.MenuItems>   
-               </UserButton>)
-               : 
-               (<button onClick={openSignIn} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
+                {user ? (
+                    <UserButton >
+                        <UserButton.MenuItems>
+                           <UserButton.Action label="My Bookings" labelIcon={<BookIcon />} onClick={()=>navigate('/my-bookings')}/>
+                        </UserButton.MenuItems>   
+                    </UserButton>)//prodile button eka click karama menu ekak open wenawa, menu eke my bookings option eka thiyenawa, eken my bookings page ekata yanawa
+                : 
+                    (<button onClick={openSignIn} className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500">
                         Login
                     </button>)
-                  }
+                }
 
                     
                 </div>
@@ -93,13 +90,14 @@ const NavBar = () => {
                 {/* Mobile Menu Button */}
                 
                 <div className="flex items-center gap-3 md:hidden">
-                  {user && <UserButton >
-                  <UserButton.MenuItems>
-                     <UserButton.Action label="My Bookings" labelIcon={<BookIcon />} onClick={()=>navigate('/my-bookings')}/>
-                  </UserButton.MenuItems>   
-               </UserButton>}
+                  {user && 
+                  <UserButton >
+                    <UserButton.MenuItems>
+                      <UserButton.Action label="My Bookings" labelIcon={<BookIcon />} onClick={()=>navigate('/my-bookings')}/>
+                    </UserButton.MenuItems>   
+                  </UserButton>}
 
-                    <img onClick={()=> setIsMenuOpen(!isMenuOpen)} src={assets.menuIcon} alt="menu" className={`${isScrolled && "invert"}h-4`} />
+                    <img onClick={()=> setIsMenuOpen(!isMenuOpen)} src={assets.menuIcon} alt="menu" className={`${isScrolled && "invert"} h-4`} />
                 </div>
 
                 {/* Mobile Menu */}

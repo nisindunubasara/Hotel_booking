@@ -60,8 +60,12 @@ export const getOwnerRooms = async (req, res) => {
 
 export const toggleRoomAvailability = async (req, res) => {
    try {
-      const {roomId} = req.body;
-      const roomData = await Room.findById(roomId);
+      const { roomId } = req.params;
+      const hotel = await Hotel.findOne({owner: req.auth.userId});
+      const roomData = await Room.findOne({ _id: roomId, hotel: hotel._id });
+      if (!roomData) {
+      return res.json({ success: false, message: "Room not found or unauthorized" });
+      }
       roomData.isAvailable = !roomData.isAvailable;
       await roomData.save();
       res.json({success: true, message: "Room availability updated"});

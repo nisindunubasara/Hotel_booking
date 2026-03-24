@@ -1,4 +1,3 @@
-import React, { use } from 'react'
 import NavBar from '../../components/HotelOwner/NavBar'
 import SideBar from '../../components/HotelOwner/SideBar'
 import { Outlet } from 'react-router-dom'

@@ -1,11 +1,11 @@
-import React,{useMemo, useState} from "react";
-import { facilityIcons, roomsDummyData } from "../assets/assets";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {useMemo, useState} from "react";
+import { facilityIcons } from "../assets/assets";
+import { useSearchParams } from "react-router-dom";
 import StarRating from "../components/StarRating";
 import { assets } from "../assets/assets";
 import { useAppContext } from "../context/AppContext";
 
-const Checkbox = ({ label, selected, onChange  = () => {} }) => {
+const Checkbox = ({ label, selected, onChange  = () => {} }) => {//label kiyanne pennanna thiyena ewa, selected kiyanne checkbox eka select unada nadda
    return (
       < label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
          <input type="checkbox" checked={selected} onChange={(e) => onChange(e.target.checked, label)}/>
@@ -19,11 +19,11 @@ const RadioButton = ({ label, selected, onChange  = () => {} }) => {
       < label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
          <input type="radio" name='sortOption' checked={selected} onChange={() => onChange(label)}/>
          <span className="font-light select-none">{label}</span>
-      </label>
+      </label>//one option select karanna radio button
    )
 }
 
-
+//hero eken ena eka metana enne
 const AllRooms = () => {
 
    const [searchParams, setSearchParams] = useSearchParams();
@@ -61,7 +61,9 @@ const AllRooms = () => {
 
    const matchesPriceRange = (room) => {
       return selectedFilters.priceRanges.length === 0 || selectedFilters.priceRanges.some((range) => {
-         const [min, max] = range.split(' - ').map(Number);
+         if (range === "$401+") return room.pricePerNight >= 401;
+         const cleaned = range.replace(/\$/g, "");
+         const [min, max] = cleaned.split(' - ').map(Number);
          return room.pricePerNight >= min && room.pricePerNight <= max;
       });
    }
@@ -75,10 +77,10 @@ const AllRooms = () => {
       return 0;
    }
 
-   const filterDestination = (rooms) => {
+   const filterDestination = (room) => {
       const destination = searchParams.get("destination");
       if(!destination) return true;
-      return rooms.hotel.city.toLowerCase().includes(destination.toLowerCase());
+      return room.hotel.city.toLowerCase().includes(destination.toLowerCase());
    }
 
    const filteredRooms = useMemo(() => {
@@ -136,7 +138,7 @@ const AllRooms = () => {
             <p className="text-base font-medium text-gray-800">FILTERS</p>
             <div className="text-xs cursor-pointer">
                <span onClick={()=> setOpenFilters(!openFilters)} className="lg:hidden">{openFilters ? 'hide' : 'show' }</span>
-               <span className="hidden lg:block">CLEAR</span>
+               <span onClick={clearFilters} className="hidden lg:block">CLEAR</span>
             </div>
          </div>
          <div className={`${openFilters ? 'h-auto' : 'h-0 lg:h-auto'} overflow-hidden transition-all duration-700`}>

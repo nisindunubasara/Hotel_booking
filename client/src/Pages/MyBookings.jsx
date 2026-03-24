@@ -4,6 +4,7 @@ import { assets } from "../assets/assets.js";
 import { useAppContext } from "../context/AppContext.jsx";
 import toast from "react-hot-toast";
 
+
 const MyBookings = () => {
 
    const { axios, getToken, user } = useAppContext();
@@ -14,6 +15,20 @@ const MyBookings = () => {
          const { data } = await axios.get('/api/bookings/user', {headers: {Authorization: `Bearer ${await getToken()}`}});
          if(data.success){
             setBookings(data.bookings);
+         }else{
+            toast.error(data.message);
+         }
+      } catch (error) {
+         toast.error(error.message);
+      }
+   }
+
+   const handlePayment = async (bookingId) => {
+      console.log("CLICKED:", bookingId);
+      try {
+         const { data } = await axios.post('/api/bookings/stripe-payment', { bookingId }, {headers: {Authorization: `Bearer ${await getToken()}`}});
+         if(data.success){
+            window.location.href = data.url;
          }else{
             toast.error(data.message);
          }
@@ -43,7 +58,7 @@ const MyBookings = () => {
             {bookings.map((booking) => (
                <div key={booking._id} className="grid grid-cols-1 md:grid-cols-[3fr_2fr_1fr] w-full border-b border-gray-300 py-6 first:border-t">
                   <div className="flex flex-col md:flex-row">
-                     <img src={booking.room.images[0]} alt="hotel-img"  className="min-md:w-44 rounded shadow object-cover"/>
+                     <img src={booking.room.images[0]} alt="hotel-img"  className="md:w-44 rounded shadow object-cover"/>
                      <div className="flex flex-col gap-1.5 max-md:mt-3 min-md:ml-4">
                            <p className="font-playfair text-2xl">{booking.hotel.name} <span className="font-inter text-sm">({booking.room.roomType})</span></p>
                         <div className="flex items-center gap-1 text-sm text-gray-500">
@@ -76,7 +91,7 @@ const MyBookings = () => {
                         <p className={`text-sm ${booking.isPaid ? 'text-green-500' : 'text-red-500'}`}>{booking.isPaid ? 'Paid' : 'Not Paid'}</p>
                      </div>
                      {!booking.isPaid && (
-                        <button className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer">Pay Now</button>
+                        <button onClick={() => handlePayment(booking._id)} className="px-4 py-1.5 mt-4 text-xs border border-gray-400 rounded-full hover:bg-gray-50 transition-all cursor-pointer">Pay Now</button>
                      )}
                   </div>
                </div>

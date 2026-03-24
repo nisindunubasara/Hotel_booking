@@ -1,7 +1,49 @@
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
-import transporter from "../configs/nodeMailer.js";
+import axios from "axios";
+import Stripe from "stripe";
+
+const sendBookingConfirmationEmail = async (to, username, booking, roomData) => {
+   try {
+      const response = await axios.post(
+         "https://api.brevo.com/v3/smtp/email",
+         {
+            sender: {
+               name: "QuickStay",
+               email: process.env.SENDER_EMAIL,
+            },
+            to: [{ email: to }],
+            subject: "Booking Confirmation",
+            htmlContent: `
+               <h2>Your booking details</h2>
+               <p>Dear ${username},</p>
+               <p>Thank you for your booking! Here are your booking details:</p>
+               <ul>
+                  <li><strong>Booking ID:</strong> ${booking._id}</li>
+                  <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
+                  <li><strong>Location:</strong> ${roomData.hotel.address}</li>
+                  <li><strong>Check-In:</strong> ${new Date(booking.checkInDate).toDateString()}</li>
+                  <li><strong>Check-Out:</strong> ${new Date(booking.checkOutDate).toDateString()}</li>
+                  <li><strong>Total Booking Amount:</strong> ${process.env.CURRENCY || "$"} ${booking.totalPrice}</li>
+               </ul>
+               <p>We look forward to hosting you!</p>
+               <p>If you need to make any changes, please contact us.</p>
+            `,
+         },
+         {
+            headers: {
+               "api-key": process.env.BREVO_API_KEY,
+               "Content-Type": "application/json",
+            },
+         }
+      );
+
+      console.log("✅ Brevo mail sent:", response.data);
+   } catch (error) {
+      console.log("❌ Brevo mail error:", error.response?.data || error.message);
+   }
+};
 
 const checkAvailability = async ({room, checkInDate, checkOutDate}) => {
    try {
@@ -13,7 +55,7 @@ const checkAvailability = async ({room, checkInDate, checkOutDate}) => {
       const isAvailable = bookings.length === 0;
       return isAvailable;
    } catch (error) {
-      console.error(error.massage);
+      console.error(error.message);
    }
 }
 
@@ -29,7 +71,7 @@ export const checkAvailabilityAPI = async (req, res) => {
 
 export const createBooking = async (req, res) => {
    try {
-      const { room, checkInDate, checkOutDate, guests } = req.body;
+      const { room, checkInDate, checkOutDate, guests, paymentMethod } = req.body;
       const user = req.user._id;
 
       const isAvailable = await checkAvailability({
@@ -59,31 +101,12 @@ export const createBooking = async (req, res) => {
          checkInDate,
          checkOutDate,
          totalPrice,
-      })
-
-      const mailOptions = {
-         from: process.env.SENDER_EMAIL,
-         to: req.user.email,
-         subject: "Booking Confirmation",
-         html:`
-            <h2>Your booking details</h2>
-            <p>Dear ${req.user.username},</p>
-            <p>Thank you for your booking! Here are your booking details:</p>
-            <ul>
-               <li><strong>Booking ID:</strong> ${booking._id}</li>
-               <li><strong>Hotel Name:</strong> ${roomData.hotel.name}</li>
-               <li><strong>Location:</strong> ${roomData.hotel.address}</li>
-               <li><strong>Date:</strong> ${new Date(booking.checkInDate).toDateString()}</li>
-               <li><strong>Booking Amount:</strong> ${process.env.CURRENCY || '$'} ${booking.totalPrice} /night </li>
-            </ul>
-            <p>We look forward to hosting you!</p>
-            <p>If you need to make any changes, please contact us.</p>
-         `
-      }
-
-      await transporter.sendMail(mailOptions);
+         paymentMethod,
+      });
 
       res.json({success: true, message: "Booking created successfully"});
+
+      sendBookingConfirmationEmail(req.user.email, req.user.username, booking, roomData);
       
    } catch (error) {
       console.log(error);
@@ -107,7 +130,7 @@ export const getHotelBookings = async (req, res) => {
       if(!hotel) {
          return res.json({success: false, message: "Hotel not found"});
       }
-      const bookings = await Booking.find({hotel: hotel._id}).populate("room hotrl user").sort({createdAt: -1});
+      const bookings = await Booking.find({hotel: hotel._id}).populate("room hotel user").sort({createdAt: -1});
 
       const totalBookings = bookings.length;
       const totalRevenue = bookings.reduce((acc, booking) => acc + booking.totalPrice, 0);
@@ -118,3 +141,56 @@ export const getHotelBookings = async (req, res) => {
       res.json({success: false, message: "Failed to fetch bookings"});
    }
 }
+
+export const stripePayment = async (req, res) => {
+   try {
+      const { bookingId } = req.body;
+      console.log("CLICKED:", bookingId);
+      console.log("BODY:", req.body);
+      console.log("BOOKING ID:", bookingId);
+
+      const booking = await Booking.findById(bookingId);
+      if (!booking) {
+         return res.json({ success: false, message: "Booking not found" });
+      }
+
+      const roomData = await Room.findById(booking.room).populate("hotel");
+      if (!roomData) {
+         return res.json({ success: false, message: "Room not found" });
+      }
+
+      const totalPrice = booking.totalPrice;
+      const { origin } = req.headers;
+
+      const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+      const line_items = [
+         {
+            price_data: {
+               currency: "usd",
+               product_data: {
+                  name: roomData.hotel.name,
+               },
+               unit_amount: totalPrice * 100,
+            },
+            quantity: 1,
+         }
+      ];
+
+      const session = await stripeInstance.checkout.sessions.create({
+         line_items,
+         mode: "payment",
+         success_url: `${origin}/loader/my-bookings`,
+         cancel_url: `${origin}/my-bookings`,
+         metadata: {
+            bookingId: booking._id.toString(),
+         }
+      });
+
+      res.json({ success: true, url: session.url });
+
+   } catch (error) {
+      console.log("Stripe payment error:", error.message);
+      res.json({ success: false, message: error.message });
+   }
+};

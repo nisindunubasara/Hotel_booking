@@ -10,6 +10,7 @@ import hotelRouter from './routes/hotelRoutes.js';
 import connectCloudinary from './configs/cloudinary.js';
 import roomRouter from './routes/roomRoutes.js';
 import bookingsRouter from './routes/bookingsRoutes.js';
+import { stripeWebhooks } from './controllers/stripeWebhooks.js';
 
 dotenv.config();
 connectDB();
@@ -17,6 +18,8 @@ connectCloudinary();
 
 const app = express();
 app.use(cors());
+
+app.post("/api/stripe", express.raw({ type: "application/json" }), stripeWebhooks);
 
 app.use(express.json());
 app.use(clerkMiddleware());

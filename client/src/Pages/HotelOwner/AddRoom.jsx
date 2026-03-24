@@ -60,7 +60,7 @@ const AddRoom = () => {
                      'Free Breakfast': false,
                      'Room Service': false,
                      'Mountain View': false,
-                     'Pool Access': false,
+                     'Swimming Pool': false,
                   }
                });
                setImages({

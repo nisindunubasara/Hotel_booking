@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";//URL eken parameter ganna
 import { useState } from "react";
 import { assets, facilityIcons, roomCommonData } from "../assets/assets";
 import StarRating from "../components/StarRating.jsx";
@@ -7,7 +7,7 @@ import { useAppContext } from "../context/AppContext.jsx";
 import toast from "react-hot-toast";
 
 const RoomDetails = () => {
-      const {id} = useParams();
+      const {id} = useParams();// hotel card eken mekata ena url eke id eka gatta
       const {rooms, getToken, axios, navigate } = useAppContext()
       const [room, setRoom] = useState(null);
       const [mainImage, setMainImage] = useState(null); 
@@ -20,14 +20,20 @@ const RoomDetails = () => {
 
       const checkAvailability = async () => {
          try {
-            if(checkInDate >= checkOutDate){
+            if(checkInDate >= checkOutDate){//2022.12.31 < 2023.01.01 
                toast.error("Check-out date must be after check-in date");
                return;
             }
-            const { data } = await axios.post(`/api/bookings/check-availability`, {room: id, checkInDate, checkOutDate })
-            if(data.success){
+            const { data } = await axios.post(`/api/bookings/check-availability`, {room: id, checkInDate, checkOutDate })//backend ekata room id, check in date, check out date yawanawa , database check karala response ekak 
+            
+            if(!data.success){
+               toast.error(data.message || "Failed to check availability. Please try again.");
+               return;//meken check wenne check availability api call ekata success unada nadda
+            }
+
+            if(data.isAvailable){
                setIsAvailable(true)
-               toast.success("Room is available for the selected dates");
+               toast.success("Room is available for the selected dates");// room rka available da kiyala check wene methanin
             }else{
                setIsAvailable(false)
                toast.error("Room is not available for the selected dates");
@@ -39,8 +45,8 @@ const RoomDetails = () => {
 
       const onSubmitHandler = async (e) => {
          try{
-            e.preventDefault();
-            if(!isAvailable){
+            e.preventDefault();//page reload wena eka nawattanawa
+            if(!isAvailable){//isAvailable false thiyena nisa mulima methanta enne,itapsse check wenawa,itapsse true unama yatata yanawa
                await checkAvailability();
                return;
             }else{
@@ -50,27 +56,37 @@ const RoomDetails = () => {
                checkOutDate,
                guests
                })
-               const { data } = await axios.post('/api/bookings/book', {room: id, checkInDate, checkOutDate, guests, paymentMethod: "pay at hotel"}, {headers: {Authorization: `Bearer ${await getToken()}`}})
+               const { data } = await axios.post('/api/bookings/book', {
+                  room: id, 
+                  checkInDate, 
+                  checkOutDate, 
+                  guests, 
+                  paymentMethod: "pay at hotel"//request body
+               }, {headers: {Authorization: `Bearer ${await getToken()}`}})
                if(data.success){
                   toast.success(data.message);
-                  navigate('/my-bookings');
+                  navigate('/my-bookings');//success unama my bookings page ekata yanawa
                   scrollTo(0,0);
                }else{
                   toast.error(data.message);
                }
             }
           } catch (error) {
-             toast.error(error.message);
+             toast.error(error.message);//server/network error
           }
       }
 
       useEffect(() => {
-         const room = rooms.find(room => room._id === id)
-         room && setRoom(room);
-         room && setMainImage(room.images[0]);
-      }, [rooms,id]);
+         setIsAvailable(false);
+      }, [checkInDate, checkOutDate, guests]);
 
-   return room && (
+      useEffect(() => {
+         const room = rooms.find(room => room._id === id)//URL eke id ekata gelapena room eka hoyagannawa
+         room && setRoom(room);//room eka thiyenawanam room state eka update karanawa
+         room && setMainImage(room.images[0]);
+      }, [rooms,id]);//room load unama ,ID change unama me effect eka run wenawa
+
+   return room && (// adala room eka thiyenam meka render wenawa 
       <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
          <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
             <h1 className="text-3xl md:text-4xl font-playfair">{room.hotel.name}<span className="font-inter text-sm">({room.roomType})</span></h1>
@@ -92,8 +108,8 @@ const RoomDetails = () => {
                <img src={mainImage} alt="Room Image" className="w-full rounded-xl shadow-lg object-cover" />
             </div>
             <div className="grid grid-cols-2 gap-4 lg:w-1/2 w-full ">
-               {room?.images.length > 1 && room.images.map((image, index) => (
-                  <img onClick={()=> setMainImage(image)} key={index} src={image} alt='Room Image' className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${mainImage === image && 'outline-3 outline-orange-500'}`}/>
+               {room?.images.length > 1 && room.images.map((image, index) => (//room eke image ekakata wada thiyenam imge click karama ewa main image eka wela pennanawa
+                  <img onClick={()=> setMainImage(image)} key={index} src={image} alt='Room Image' className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${mainImage === image && 'outline-3 outline-orange-500'}`}/>//main image ekata click karama ewa thebilipata line ekakin pennanawa
                ))}
             </div>
          </div>
@@ -118,18 +134,19 @@ const RoomDetails = () => {
             <div className="flex flex-col flex-wrap md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500">
 
                <div className="flex flex-col">
-                  <label htmlFor="chechInDate" className="font-medium">Check In</label>
-                  <input onChange={(e)=>setCheckInDate(e.target.value)} min={new Date().toISOString().split('T')[0]} type="date" id="checkInData" placeholder="Check In" className="w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
+                  <label htmlFor="checkInDate" className="font-medium">Check In</label>
+                  <input onChange={(e)=>setCheckInDate(e.target.value)} min={new Date().toISOString().split('T')[0]}// ada date eke format eka gtta
+                   type="date" id="checkInDate" placeholder="Check In" className="w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
                </div>
                <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
                <div className="flex flex-col">
-                  <label htmlFor="chechOutDate" className="font-medium">Check Out</label>
-                  <input onChange={(e)=>setCheckOutDate(e.target.value)} min={checkInDate} disabled={!checkInDate} type="date" id="checkOutData" placeholder="Check Out" className="w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
+                  <label htmlFor="checkOutDate" className="font-medium">Check Out</label>
+                  <input onChange={(e)=>setCheckOutDate(e.target.value)} min={checkInDate} disabled={!checkInDate} type="date" id="checkOutDate" placeholder="Check Out" className="w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
                </div>
                <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
                <div className="flex flex-col">
                   <label htmlFor="guests" className="font-medium">Guests</label>
-                  <input onChange={(e)=>setGuests (e.target.value)} value={guests} type="number" id="guests" placeholder="1" className="max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
+                  <input onChange={(e)=>setGuests(Number(e.target.value))} value={guests} type="number" id="guests" placeholder="1" className="max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none" required/>
                </div>
 
             </div>

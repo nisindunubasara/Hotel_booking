@@ -44,7 +44,7 @@ const DashBoard = () => {
             <img src={assets.totalBookingIcon} alt="" className='max-sm:hidden h-10' />
             <div className='flex flex-col sm:ml-4 font-medium'>
                <p className='text-blue-500 text-lg'>Total Bookings</p>
-               <p className='text-natural-400 text-base'>{dashboardData.totalBookings}</p>
+               <p className='text-neutral-400 text-base'>{dashboardData.totalBookings}</p>
             </div>
          </div>
 
@@ -52,7 +52,7 @@ const DashBoard = () => {
             <img src={assets.totalRevenueIcon} alt="" className='max-sm:hidden h-10' />
             <div className='flex flex-col sm:ml-4 font-medium'>
                <p className='text-blue-500 text-lg'>Total Revenue</p>
-               <p className='text-natural-400 text-base'>${dashboardData.totalRevenue}</p>
+               <p className='text-neutral-400 text-base'>${dashboardData.totalRevenue}</p>
             </div>
          </div>
 
@@ -81,7 +81,7 @@ const DashBoard = () => {
                      <td className='py-3 px-4 text-gray-700 border-t border-gray-300 text-center'>${item.totalPrice}</td>
 
                      <td className='py-3 px-4 border-t border-gray-300 flex'>
-                        <button className={`py-1 px3 text-xs rounded-full mx-auto ${item.isPaid ? 'bg-green-200 text-green-600' : 'bg-amber-200 text-yellow-600'}`}>
+                        <button className={`py-1 px-3 text-xs rounded-full mx-auto ${item.isPaid ? 'bg-green-200 text-green-600' : 'bg-amber-200 text-yellow-600'}`}>
                            {item.isPaid ? 'Paid' : 'Pending'}
                         </button>
                      </td>
